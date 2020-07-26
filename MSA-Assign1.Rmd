@@ -1,0 +1,106 @@
+---
+title: "msa-assign1"
+author: "Gia Han To"
+date: "24/07/2020"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+houseprice = read.csv('House_Price .csv')
+dim(houseprice)
+summary(houseprice)
+#Drop unnecessary variabes
+houseprice = houseprice[,-c(3,6,7,8)]
+
+
+summary(houseprice$CV)
+
+#Median is markedly lower than the mean value.CV shows a right-skewed distribution which is a very common when it comes to thing involving money, growth, salary and age. 
+```
+
+```{r, echo=FALSE, fig.height=50, fig.width=50}
+pairs(houseprice,pch=19,col=rgb(0,0,1,.4))
+
+```
+
+```{r}
+
+corr = cor(houseprice[,-11])
+
+
+library(corrplot)
+corrplot(corr, method="circle")
+
+```
+
+```{r}
+#split dataset into training and test
+
+set.seed(123)
+
+x = houseprice
+dx = sort(sample(nrow(x),nrow(x)*0.7))
+
+train = x[dx,]
+test= x[-dx,]
+
+
+
+```
+
+
+```{r}
+
+
+#create the model
+
+model1 = lm(CV~.,data=train)
+summary(model1)
+plot(model1)
+
+#log model
+model2 = lm(log(CV)~.,data=train)
+summary(model2)
+plot(model2)
+
+#select some key variables
+train3 = train[,-c(5:10)]
+model3 = lm(log(CV)~., data = train3)
+summary(model3)
+plot(model3)
+```
+
+
+```{r}
+
+#Prediction 
+test = test[test$Suburbs %in% train$Suburbs, , drop=FALSE]
+
+prediction1 = predict(model1,test)
+
+prediction2 = predict(model2,test)
+
+prediction3 = predict(model3,test)
+
+#Accuracy
+actual = test$CV
+RMSE1 = sqrt(mean(prediction1-actual)^2)
+RMSE1
+
+RMSE2 = sqrt(mean(exp(prediction2)-actual)^2)
+RMSE2
+
+RMSE3 = sqrt(mean(exp(prediction3)-actual)^2)
+RMSE3
+
+
+
+```
